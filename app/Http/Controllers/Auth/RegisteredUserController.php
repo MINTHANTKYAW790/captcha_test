@@ -33,16 +33,8 @@ class RegisteredUserController extends Controller
         $request->validate([
             'name' => ['required', 'string', 'max:255'],
             'email' => ['required', 'string', 'lowercase', 'email', 'max:255', 'unique:'.User::class],
-            'password' => [
-                'required',
-                'string',
-                'min:8', // Minimum 8 characters
-                'regex:/[A-Z]/', // At least one uppercase letter
-                'regex:/[a-z]/', // At least one lowercase letter
-                'regex:/[0-9]/', // At least one digit
-                'regex:/[@$!%*?&]/', // At least one special character
-                'confirmed',
-            ],
+            'password' => ['required', 'confirmed', Rules\Password::defaults()],
+            'g-recaptcha-response' => ['required', 'captcha'],
         ]);
 
         $user = User::create([
