@@ -36,6 +36,11 @@ class User extends Authenticatable implements MustVerifyEmail
         'remember_token',
     ];
 
+    protected $casts = [
+        'email_verified_at' => 'datetime',
+        'email_2fa_expires_at' => 'datetime', 
+    ];
+
     /**
      * Get the attributes that should be cast.
      *

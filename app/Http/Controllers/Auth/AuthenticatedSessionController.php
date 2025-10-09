@@ -8,6 +8,8 @@ use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\View\View;
+use Carbon\Carbon;
+use App\Notifications\EmailTwoFactorCode;
 
 class AuthenticatedSessionController extends Controller
 {
@@ -25,10 +27,19 @@ class AuthenticatedSessionController extends Controller
     public function store(LoginRequest $request): RedirectResponse
     {
         $request->authenticate();
-
+        
         $request->session()->regenerate();
 
-        return redirect()->intended(route('dashboard', absolute: false));
+        /** @var \App\Models\User $user */
+        $user = Auth::user();
+
+        $user->email_2fa_code = rand(100000, 999999);
+        $user->email_2fa_expires_at = Carbon::now()->addMinutes(10);
+        $user->save();
+
+        $user->notify(new EmailTwoFactorCode());
+
+        return redirect()->route('2fa.index');
     }
 
     /**
@@ -43,5 +54,13 @@ class AuthenticatedSessionController extends Controller
         $request->session()->regenerateToken();
 
         return redirect('/');
+    }
+
+    public function sendTwoFactorCode($user)
+    {
+        $user->email_2fa_code = rand(100000, 999999); // 6-digit code
+        $user->email_2fa_expires_at = Carbon::now()->addMinutes(10);
+        $user->save();
+        $user->notify(new EmailTwoFactorCode());
     }
 }
